@@ -41,6 +41,7 @@ __INLINE static void Delay (uint32_t dlyTicks) {
 
   curTicks = msTicks;
   while ((msTicks - curTicks) < dlyTicks);
+  msTicks = 0;
 }
 
 /*------------------------------------------------------------------------------
@@ -73,16 +74,19 @@ __INLINE static void LED_Off (uint32_t led) {
  *----------------------------------------------------------------------------*/
 int main (void) {
 
+  SystemCoreClockUpdate();
+
   if (SysTick_Config(SystemCoreClock / 1000)) { /* Setup SysTick Timer for 1 msec interrupts  */
     while (1);                                  /* Capture error */
   }
-  
+
   LED_Config();                             
  
+  uint32_t led = 1<<18;
   while(1) {
-    LED_On ((1<<18));                           /* Turn on the LED. */
+    LED_On (led);                               /* Turn on the LED. */
     Delay (100);                                /* delay  100 Msec */
-    LED_Off ((1<<18));                          /* Turn off the LED. */
+    LED_Off (led);                              /* Turn off the LED. */
     Delay (100);                                /* delay  100 Msec */
   }
   
