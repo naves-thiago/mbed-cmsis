@@ -49,7 +49,7 @@ __INLINE static void Delay (uint32_t dlyTicks) {
  *------------------------------------------------------------------------------*/
 __INLINE static void LED_Config(void) {
 
-  LPC_GPIO1->FIODIR = 0xFFFFFFFF;               /* LEDs PORT1 are Output */
+  LPC_GPIO2->FIODIR = 0xFFFFFFFF;               /* LEDs PORT1 are Output */
 }
 
 /*------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ __INLINE static void LED_Config(void) {
  *------------------------------------------------------------------------------*/
 __INLINE static void LED_On (uint32_t led) {
 
-  LPC_GPIO1->FIOPIN |=  (led);                  /* Turn On  LED */
+  LPC_GPIO2->FIOPIN =  (led);                  /* Turn On  LED */
 }
 
 
@@ -66,7 +66,8 @@ __INLINE static void LED_On (uint32_t led) {
  *------------------------------------------------------------------------------*/
 __INLINE static void LED_Off (uint32_t led) {
 
-  LPC_GPIO1->FIOPIN &= ~(led);                  /* Turn Off LED */
+  //LPC_GPIO2->FIOPIN &= ~(led);                  /* Turn Off LED */
+  LPC_GPIO2->FIOPIN = 0;                  /* Turn Off LED */
 }
 
 /*----------------------------------------------------------------------------
@@ -82,12 +83,13 @@ int main (void) {
 
   LED_Config();                             
  
-  uint32_t led = 1<<18;
+  #define led  0xFFFFFFFF
+  //uint32_t led = 0xFFFFFFFF;  // 1<<18;
   while(1) {
     LED_On (led);                               /* Turn on the LED. */
-    Delay (100);                                /* delay  100 Msec */
+//    Delay (100);                                /* delay  100 Msec */
     LED_Off (led);                              /* Turn off the LED. */
-    Delay (100);                                /* delay  100 Msec */
+//    Delay (100);                                /* delay  100 Msec */
   }
   
 }
