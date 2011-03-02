@@ -26,7 +26,7 @@ SIZE = arm-eabi-size
 #########################################################################
 
 #all:: $(PROJECT).hex $(PROJECT).bin
-$(phony all): $(PROJECT).hex $(PROJECT).bin %.c %.cpp
+$(phony all): $(PROJECT).hex $(PROJECT).bin %.c %.cpp %.h
 
 $(PROJECT).bin: $(PROJECT).elf
 	$(OBJCOPY) -O binary -j .text -j .data $(PROJECT).elf $(PROJECT).bin
@@ -52,7 +52,7 @@ clean:
 #  Default rules to compile .c and .cpp file to .o
 #  and assemble .s files to .o
 
-.c.o :
+%.o : %.c %.h
 	$(GCC) $(GCFLAGS) -c $<
 
 .cpp.o :
