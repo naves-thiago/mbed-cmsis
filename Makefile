@@ -4,7 +4,7 @@ PROJECT=mbed_test
 OBJECTS=startup_LPC17xx.o core_cm3.o system_LPC17xx.o main_LPC17xx.o 
 LSCRIPT=LPC17xx.ld
 
-OPTIMIZATION = 0
+OPTIMIZATION = s
 DEBUG = -g
 #LISTING = -ahls
 
