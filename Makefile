@@ -10,8 +10,6 @@ DEBUG = -g
 
 #  Compiler Options
 GCFLAGS = -Wall -fno-common -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) $(DEBUG)
-#GCFLAGS += -Wcast-align -Wcast-qual -Wimplicit -Wpointer-arith -Wswitch
-#GCFLAGS += -Wredundant-decls -Wreturn-type -Wshadow -Wunused
 LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles -Wl,-Map=$(PROJECT).map -T$(LSCRIPT)
 ASFLAGS = $(LISTING) -mcpu=cortex-m3
 
@@ -25,17 +23,25 @@ SIZE = arm-eabi-size
 
 #########################################################################
 
-#all:: $(PROJECT).hex $(PROJECT).bin
-$(phony all): $(PROJECT).hex $(PROJECT).bin %.c %.cpp %.h
-
-$(PROJECT).bin: $(PROJECT).elf
+all: $(PROJECT).elf stats
 	$(OBJCOPY) -O binary -j .text -j .data $(PROJECT).elf $(PROJECT).bin
-
-$(PROJECT).hex: $(PROJECT).elf
-	$(OBJCOPY) -R .stack -O ihex $(PROJECT).elf $(PROJECT).hex
 
 $(PROJECT).elf: $(OBJECTS)
 	$(GCC) $(LDFLAGS) $(OBJECTS) -o $(PROJECT).elf
+
+startup_LPC17xx.o: startup_LPC17xx.s
+	$(AS) $(ASFLAGS) -o startup_LPC17xx.o startup_LPC17xx.s > $(PROJECT)_crt.lst
+
+core_cm3.o: core_cm3.c
+	$(GCC) $(GCFLAGS) -c core_cm3.c
+
+system_LPC17xx.o: system_LPC17xx.c
+	$(GCC) $(GCFLAGS) -c system_LPC17xx.c
+
+main_LPC17xx.o: main_LPC17xx.c
+	$(GCC) $(GCFLAGS) -c main_LPC17xx.c
+
+startup_LPC17xx.o: startup_LPC17xx.s
 
 stats: $(PROJECT).elf
 	$(SIZE) $(PROJECT).elf
@@ -59,6 +65,5 @@ clean:
 	$(GCC) $(GCFLAGS) -c $<
 
 .S.o :
-	$(AS) $(ASFLAGS) -o $(PROJECT)_crt.o $< > $(PROJECT)_crt.lst
 
 #########################################################################
