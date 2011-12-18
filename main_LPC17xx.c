@@ -108,7 +108,9 @@ uint32_t UARTInit( uint32_t PortNum, uint32_t baudrate )
     LPC_UART0->DLM = Fdiv / 256;              
     LPC_UART0->DLL = Fdiv % 256;
     LPC_UART0->LCR = 0x03;    /* DLAB = 0 */
-    LPC_UART0->FCR = 0x07;    /* Enable and reset TX and RX FIFO. */
+//    LPC_UART0->FCR = 0x07;    /* Enable and reset TX and RX FIFO. */
+    LPC_UART0->IER = 1; /* Enable Receive Data Avaliable interrupt */
+    NVIC_EnableIRQ( UART0_IRQn);
 
     return (1);
   }
@@ -143,7 +145,9 @@ uint32_t UARTInit( uint32_t PortNum, uint32_t baudrate )
     LPC_UART1->DLM = Fdiv / 256;              
     LPC_UART1->DLL = Fdiv % 256;
     LPC_UART1->LCR = 0x03;    /* DLAB = 0 */
-    LPC_UART1->FCR = 0x07;    /* Enable and reset TX and RX FIFO. */
+//    LPC_UART1->FCR = 0x07;    /* Enable and reset TX and RX FIFO. */
+    LPC_UART1->IER = 1; /* Enable Receive Data Avaliable interrupt */
+    NVIC_EnableIRQ( UART1_IRQn);
 
     return 1; 
   }
@@ -202,6 +206,7 @@ int main (void) {
     while (1);                                  /* Capture error */
   }
 
+  __enable_irq();
   LED_Config();                             
   UARTInit( 0, 9600 );
 
@@ -217,3 +222,15 @@ int main (void) {
 
 }
 
+/*
+ * UART0 interrupt handler
+ */
+void UART0_IRQHandler(void) {
+//  switch(LPC_UART0->IIR & 0x0E) {
+//    case RDA_INTERRUPT:
+//    case CTI_INTERRUPT:
+      // Loopback to send
+      LPC_UART0->THR = LPC_UART0->RBR;
+//      break;
+//  }
+}
