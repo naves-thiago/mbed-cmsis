@@ -1,25 +1,14 @@
-/**************************************************************************//**
- * @file     main.c
- * @brief    CMSIS Cortex-M3 Blinky example
- *           Blink a LED using CM3 SysTick
- * @version  V1.03
- * @date     24. September 2009
- *
- * @note
- * Copyright (C) 2009 ARM Limited. All rights reserved.
- *
- * @par
- * ARM Limited (ARM) is supplying this software for use with Cortex-M 
- * processor based microcontrollers.  This file can be freely distributed 
- * within development tools that are supporting such ARM based processors. 
- *
- * @par
- * THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
- * OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE.
- * ARM SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR
- * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
- *
+/******************************************************************************
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
 #include "LPC17xx.h"
@@ -69,131 +58,51 @@ __INLINE static void LED_Off (uint32_t led) {
   LPC_GPIO1->FIOPIN &= ~(led);                  /* Turn Off LED */
 }
 
-
 /*----------------------------------------------------------------------------
-  UART0 configuration
+  SPI functions 
  *----------------------------------------------------------------------------*/
-uint32_t UARTInit( uint32_t PortNum, uint32_t baudrate )
+
+/* Param: clk = desired clock
+ * Retun: actual clock
+ */
+unsigned int spi_init_master( unsigned int clk )
 {
-  uint32_t Fdiv;
-  uint32_t pclkdiv, pclk;
+  uint32_t SPCR = 0; // SPI Control Register
+  uint32_t clk_tmp;  // Used to calculate the SPI Clock Counter
+  uint8_t SPCCR;     // SPI clock counter register
 
-  if ( PortNum == 0 )
+  SPCR |= 0<<2;  // 8 bits mode
+  SPCR |= 1<<3;  /* Data is sampled on the second clock edge of the SCK. 
+                    A transfer starts with the first clock edge, and ends
+                    with the last sampling edge when the SSEL signal is active.*/
+  SPCR |= 0<<4;  // Clock polarity: active high
+  SPCR |= 1<<5;  // Master Mode
+  SPCR |= 1<<6;  // LSB (bit 0) first mode
+  SPCR |= 1<<7;  // Enable SPI interrupts
+
+  LPC_SPI->SPCR = SPCR;
+
+  switch ((LPC_SC->PCLKSEL0 >>16) & 3)
   {
-    LPC_PINCON->PINSEL0 &= ~0x000000F0;
-    LPC_PINCON->PINSEL0 |= 0x00000050;  /* RxD0 is P0.3 and TxD0 is P0.2 */
-    /* By default, the PCLKSELx value is zero, thus, the PCLK for
-     *  all the peripherals is 1/4 of the SystemCoreClock. */
-    /* Bit 6~7 is for UART0 */
-    pclkdiv = (LPC_SC->PCLKSEL0 >> 6) & 0x03;
-    switch ( pclkdiv )
-    {
-      case 0x00:
-      default:
-        pclk = SystemCoreClock/4;
-        break;
-      case 0x01:
-        pclk = SystemCoreClock;
-        break; 
-      case 0x02:
-        pclk = SystemCoreClock/2;
-        break; 
-      case 0x03:
-        pclk = SystemCoreClock/8;
-        break;
-    }
+    case 0: clk_tmp = SystemCoreClock / 4;
+    case 1: clk_tmp = SystemCoreClock;
+    case 2: clk_tmp = SystemCoreClock / 2;
+    case 3: clk_tmp = SystemCoreClock / 8;
+  };
 
-    LPC_UART0->LCR = 0x83;    /* 8 bits, no Parity, 1 Stop bit */
-    Fdiv = ( pclk / 16 ) / baudrate ; /*baud rate */
-    LPC_UART0->DLM = Fdiv / 256;              
-    LPC_UART0->DLL = Fdiv % 256;
-    LPC_UART0->LCR = 0x03;    /* DLAB = 0 */
-//    LPC_UART0->FCR = 0x07;    /* Enable and reset TX and RX FIFO. */
-    LPC_UART0->IER = 1; /* Enable Receive Data Avaliable interrupt */
-    NVIC_EnableIRQ( UART0_IRQn);
+  // Calculate the clock counter ( note: PCCR must be even >= 8 ):
+  SPCCR = clk_tmp / clk;
+  if ( (SPCCR & 1) != 0)
+    SPCCR--;
 
-    return (1);
-  }
-  else if ( PortNum == 1 )
+  if (SPCCR >= 8)
   {
-    LPC_PINCON->PINSEL4 &= ~0x0000000F;
-    LPC_PINCON->PINSEL4 |= 0x0000000A;  /* Enable RxD1 P2.1, TxD1 P2.0 */
-
-    /* By default, the PCLKSELx value is zero, thus, the PCLK for
-     *  all the peripherals is 1/4 of the SystemCoreClock. */
-    /* Bit 8,9 are for UART1 */
-    pclkdiv = (LPC_SC->PCLKSEL0 >> 8) & 0x03;
-    switch ( pclkdiv )
-    {
-      case 0x00:
-      default:
-        pclk = SystemCoreClock/4;
-        break;
-      case 0x01:
-        pclk = SystemCoreClock;
-        break; 
-      case 0x02:
-        pclk = SystemCoreClock/2;
-        break; 
-      case 0x03:
-        pclk = SystemCoreClock/8;
-        break;
-    }
-
-    LPC_UART1->LCR = 0x83;    /* 8 bits, no Parity, 1 Stop bit */
-    Fdiv = ( pclk / 16 ) / baudrate ; /*baud rate */
-    LPC_UART1->DLM = Fdiv / 256;              
-    LPC_UART1->DLL = Fdiv % 256;
-    LPC_UART1->LCR = 0x03;    /* DLAB = 0 */
-//    LPC_UART1->FCR = 0x07;    /* Enable and reset TX and RX FIFO. */
-    LPC_UART1->IER = 1; /* Enable Receive Data Avaliable interrupt */
-    NVIC_EnableIRQ( UART1_IRQn);
-
-    return 1; 
+    LPC_SPI->SPCCR = SPCCR;
+    return SPCCR;
   }
-  return 0; 
+
+  return 0;
 }
-
-/*****************************************************************************
- * ** Function name:    UARTSend
- * **
- * ** Descriptions:   Send a block of data to the UART 0 port based
- * **           on the data length
- * **
- * ** parameters:     portNum, buffer pointer, and data length
- * ** Returned value:   None
- * ** 
- * *****************************************************************************/
-void UARTSend( uint32_t portNum, uint8_t *BufferPtr, uint32_t Length )
-{
-  if ( portNum == 0 )
-  {
-    while ( Length != 0 )
-    {
-      /* THRE status, contain valid data */
-      while ( !(LPC_UART0->LSR & 1<<5) ); 
-      LPC_UART0->THR = *BufferPtr;
-      BufferPtr++;
-      Length--;
-    }
-  }
-  else
-  {
-    while ( Length != 0 )
-    {
-      /* THRE status, contain valid data */
-      while ( !(LPC_UART1->LSR & 1<<5) ); 
-      LPC_UART1->THR = *BufferPtr;
-      BufferPtr++;
-      Length--;
-    }
-  }
-  return;
-}
-
-/******************************************************************************
- * **                            End Of File
- * ******************************************************************************/
 
 /*----------------------------------------------------------------------------
   MAIN function
@@ -208,7 +117,6 @@ int main (void) {
 
   __enable_irq();
   LED_Config();                             
-  UARTInit( 0, 9600 );
 
 
   uint32_t led = 1<<18;
@@ -217,20 +125,7 @@ int main (void) {
     Delay (100);                                /* delay  100 Msec */
     LED_Off (led);                              /* Turn off the LED. */
     Delay (100);                                /* delay  100 Msec */
-    UARTSend( 0, "1234567890---", 13 );
   }
 
 }
 
-/*
- * UART0 interrupt handler
- */
-void UART0_IRQHandler(void) {
-//  switch(LPC_UART0->IIR & 0x0E) {
-//    case RDA_INTERRUPT:
-//    case CTI_INTERRUPT:
-      // Loopback to send
-      LPC_UART0->THR = LPC_UART0->RBR;
-//      break;
-//  }
-}
