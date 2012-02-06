@@ -82,6 +82,10 @@ unsigned int spi_init_master( unsigned int clk )
 
   LPC_SPI->SPCR = SPCR;
 
+  // Change Pin Functions
+  LPC_PINCON->PINSEL0 |= 3 << 30;             // SCK
+  LPC_PINCON->PINSEL1 |= 3 | 3 << 2 | 3 << 4; // SSEL | MISO | MOSI
+
   switch ((LPC_SC->PCLKSEL0 >>16) & 3)
   {
     case 0: clk_tmp = SystemCoreClock / 4;
@@ -118,7 +122,15 @@ int main (void) {
   __enable_irq();
   LED_Config();                             
 
+  spi_init_master( 9600 );
+  NVIC_EnableIRQ( SPI_IRQn ); 
 
+  LPC_SPI->SPDR = 'A';
+  LED_On( 1<<20 );
+
+  while (1);
+
+#if 0
   uint32_t led = 1<<18;
   while(1) {
     LED_On (led);                               /* Turn on the LED. */
@@ -126,6 +138,17 @@ int main (void) {
     LED_Off (led);                              /* Turn off the LED. */
     Delay (100);                                /* delay  100 Msec */
   }
+#endif    
 
 }
 
+void SPI_IRQHandler()
+{
+  uint32_t tmp;
+  LPC_GPIO1->FIOPIN |=  1<<18;                  /* Turn On  LED 1*/
+  
+  tmp = LPC_SPI->SPSR;
+
+  if ( LPC_SPI->SPDR == 'A')
+    LPC_GPIO1->FIOPIN |=  1<<21;                  /* Turn On  LED 3*/
+}
