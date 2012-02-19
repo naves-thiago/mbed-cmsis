@@ -4,6 +4,49 @@ PROJECT=mbed_test
 OBJECTS=startup_LPC17xx.o core_cm3.o system_LPC17xx.o main_LPC17xx.o 
 LSCRIPT=LPC17xx.ld
 
+LUFA=LUFA/Drivers/USB/Class/Host/HID.o \
+		 LUFA/Drivers/USB/Class/Common/HIDParser.o \
+		 LUFA/Drivers/USB/Class/Common/HIDParser.o \
+		 LUFA/Drivers/USB/Class/Device/Audio.o \
+		 LUFA/Drivers/USB/Class/Device/CDC.o \
+		 LUFA/Drivers/USB/Class/Device/HID.o \
+		 LUFA/Drivers/USB/Class/Device/MassStorage.o \
+		 LUFA/Drivers/USB/Class/Device/MIDI.o \
+		 LUFA/Drivers/USB/Class/Device/RNDIS.o \
+		 LUFA/Drivers/USB/Class/Host/Audio.o \
+		 LUFA/Drivers/USB/Class/Host/CDC.o \
+		 LUFA/Drivers/USB/Class/Host/HID.o \
+		 LUFA/Drivers/USB/Class/Host/MassStorage.o \
+		 LUFA/Drivers/USB/Class/Host/MIDI.o \
+		 LUFA/Drivers/USB/Class/Host/Printer.o \
+		 LUFA/Drivers/USB/Class/Host/RNDIS.o \
+		 LUFA/Drivers/USB/Class/Host/StillImage.o \
+		 LUFA/Drivers/USB/Core/ConfigDescriptor.o \
+		 LUFA/Drivers/USB/Core/DeviceStandardReq.o \
+		 LUFA/Drivers/USB/Core/Events.o \
+		 LUFA/Drivers/USB/Core/HostStandardReq.o \
+		 LUFA/Drivers/USB/Core/LPC/DCD/LPC11UXX/Endpoint_LPC11Uxx.o \
+		 LUFA/Drivers/USB/Core/LPC/DCD/LPC17XX/Endpoint_LPC17xx.o \
+		 LUFA/Drivers/USB/Core/LPC/DCD/LPC18XX/Endpoint_LPC18xx.o \
+		 LUFA/Drivers/USB/Core/LPC/Device_LPC.o \
+		 LUFA/Drivers/USB/Core/LPC/Endpoint_LPC.o \
+		 LUFA/Drivers/USB/Core/LPC/EndpointStream_LPC.o \
+		 LUFA/Drivers/USB/Core/LPC/HAL/HAL_LPC.o \
+		 LUFA/Drivers/USB/Core/LPC/HAL/LPC11UXX/HAL_LPC11Uxx.o \
+		 LUFA/Drivers/USB/Core/LPC/HAL/LPC17XX/HAL_LPC17xx.o \
+		 LUFA/Drivers/USB/Core/LPC/HAL/LPC18XX/HAL_LPC18xx.o \
+		 LUFA/Drivers/USB/Core/LPC/HCD/EHCI/EHCI.o \
+		 LUFA/Drivers/USB/Core/LPC/HCD/HCD.o \
+		 LUFA/Drivers/USB/Core/LPC/HCD/OHCI/OHCI.o \
+		 LUFA/Drivers/USB/Core/LPC/Host_LPC.o \
+		 LUFA/Drivers/USB/Core/LPC/Pipe_LPC.o \
+		 LUFA/Drivers/USB/Core/LPC/PipeStream_LPC.o \
+		 LUFA/Drivers/USB/Core/LPC/USBController_LPC.o \
+		 LUFA/Drivers/USB/Core/USBMemory.o \
+		 LUFA/Drivers/USB/Core/USBTask.o
+
+OBJECTS+=$(LUFA)
+
 OPTIMIZATION = 0
 DEBUG = -g
 #LISTING = -ahls
@@ -32,17 +75,6 @@ $(PROJECT).elf: $(OBJECTS)
 startup_LPC17xx.o: startup_LPC17xx.s
 	$(AS) $(ASFLAGS) -o startup_LPC17xx.o startup_LPC17xx.s > $(PROJECT)_crt.lst
 
-core_cm3.o: core_cm3.c
-	$(GCC) $(GCFLAGS) -c core_cm3.c
-
-system_LPC17xx.o: system_LPC17xx.c
-	$(GCC) $(GCFLAGS) -c system_LPC17xx.c
-
-main_LPC17xx.o: main_LPC17xx.c
-	$(GCC) $(GCFLAGS) -c main_LPC17xx.c
-
-startup_LPC17xx.o: startup_LPC17xx.s
-
 stats: $(PROJECT).elf
 	$(SIZE) $(PROJECT).elf
 
@@ -59,11 +91,9 @@ clean:
 #  and assemble .s files to .o
 
 %.o : %.c %.h
-	$(GCC) $(GCFLAGS) -c $<
+	$(GCC) $(GCFLAGS) -c $< -o $@
 
 .cpp.o :
-	$(GCC) $(GCFLAGS) -c $<
-
-.S.o :
+	$(GCC) $(GCFLAGS) -c $< -o $@
 
 #########################################################################
