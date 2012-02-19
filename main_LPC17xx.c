@@ -59,56 +59,6 @@ __INLINE static void LED_Off (uint32_t led) {
 }
 
 /*----------------------------------------------------------------------------
-  SPI functions 
- *----------------------------------------------------------------------------*/
-
-/* Param: clk = desired clock
- * Retun: actual clock
- */
-unsigned int spi_init_master( unsigned int clk )
-{
-  uint32_t SPCR = 0; // SPI Control Register
-  uint32_t clk_tmp;  // Used to calculate the SPI Clock Counter
-  uint8_t SPCCR;     // SPI clock counter register
-
-  SPCR |= 0<<2;  // 8 bits mode
-  SPCR |= 1<<3;  /* Data is sampled on the second clock edge of the SCK. 
-                    A transfer starts with the first clock edge, and ends
-                    with the last sampling edge when the SSEL signal is active.*/
-  SPCR |= 0<<4;  // Clock polarity: active high
-  SPCR |= 1<<5;  // Master Mode
-  SPCR |= 1<<6;  // LSB (bit 0) first mode
-  SPCR |= 1<<7;  // Enable SPI interrupts
-
-  LPC_SPI->SPCR = SPCR;
-
-  // Change Pin Functions
-  LPC_PINCON->PINSEL0 |= 3 << 30;             // SCK
-  LPC_PINCON->PINSEL1 |= 3 | 3 << 2 | 3 << 4; // SSEL | MISO | MOSI
-
-  switch ((LPC_SC->PCLKSEL0 >>16) & 3)
-  {
-    case 0: clk_tmp = SystemCoreClock / 4;
-    case 1: clk_tmp = SystemCoreClock;
-    case 2: clk_tmp = SystemCoreClock / 2;
-    case 3: clk_tmp = SystemCoreClock / 8;
-  };
-
-  // Calculate the clock counter ( note: PCCR must be even >= 8 ):
-  SPCCR = clk_tmp / clk;
-  if ( (SPCCR & 1) != 0)
-    SPCCR--;
-
-  if (SPCCR >= 8)
-  {
-    LPC_SPI->SPCCR = SPCCR;
-    return SPCCR;
-  }
-
-  return 0;
-}
-
-/*----------------------------------------------------------------------------
   MAIN function
  *----------------------------------------------------------------------------*/
 int main (void) {
@@ -121,12 +71,6 @@ int main (void) {
 
   __enable_irq();
   LED_Config();                             
-
-  spi_init_master( 9600 );
-  NVIC_EnableIRQ( SPI_IRQn ); 
-
-  LPC_SPI->SPDR = 'A';
-  LED_On( 1<<20 );
 
   while (1);
 
@@ -142,13 +86,3 @@ int main (void) {
 
 }
 
-void SPI_IRQHandler()
-{
-  uint32_t tmp;
-  LPC_GPIO1->FIOPIN |=  1<<18;                  /* Turn On  LED 1*/
-  
-  tmp = LPC_SPI->SPSR;
-
-  if ( LPC_SPI->SPDR == 'A')
-    LPC_GPIO1->FIOPIN |=  1<<21;                  /* Turn On  LED 3*/
-}
