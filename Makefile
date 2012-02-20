@@ -52,7 +52,7 @@ DEBUG = -g
 #LISTING = -ahls
 
 #  Compiler Options
-GCFLAGS = -Wall -fno-common -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) $(DEBUG) -I inc
+GCFLAGS = -Wall -fno-common -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) $(DEBUG)
 LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles -Wl,-Map=$(PROJECT).map -T$(LSCRIPT)
 ASFLAGS = $(LISTING) -mcpu=cortex-m3
 
