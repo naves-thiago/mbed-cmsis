@@ -32,17 +32,6 @@ $(PROJECT).elf: $(OBJECTS)
 startup_LPC17xx.o: startup_LPC17xx.s
 	$(AS) $(ASFLAGS) -o startup_LPC17xx.o startup_LPC17xx.s > $(PROJECT)_crt.lst
 
-core_cm3.o: core_cm3.c
-	$(GCC) $(GCFLAGS) -c core_cm3.c
-
-system_LPC17xx.o: system_LPC17xx.c
-	$(GCC) $(GCFLAGS) -c system_LPC17xx.c
-
-main_LPC17xx.o: main_LPC17xx.c
-	$(GCC) $(GCFLAGS) -c main_LPC17xx.c
-
-startup_LPC17xx.o: startup_LPC17xx.s
-
 stats: $(PROJECT).elf
 	$(SIZE) $(PROJECT).elf
 
@@ -58,7 +47,7 @@ clean:
 #  Default rules to compile .c and .cpp file to .o
 #  and assemble .s files to .o
 
-%.o : %.c %.h
+%.o : %.c
 	$(GCC) $(GCFLAGS) -c $<
 
 .cpp.o :
