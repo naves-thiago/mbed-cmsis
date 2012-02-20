@@ -153,7 +153,7 @@ uint32_t UARTInit( uint32_t PortNum, uint32_t baudrate )
 * ** Returned value: None
 * **
 * *****************************************************************************/
-void UARTSend( uint32_t portNum, uint8_t *BufferPtr, uint32_t Length )
+void UARTSend( uint32_t portNum, char *BufferPtr, uint32_t Length )
 {
   if ( portNum == 0 )
   {
@@ -161,7 +161,7 @@ void UARTSend( uint32_t portNum, uint8_t *BufferPtr, uint32_t Length )
     {
       /* THRE status, contain valid data */
       while ( !(LPC_UART0->LSR & 1<<5) );
-      LPC_UART0->THR = *BufferPtr;
+      LPC_UART0->THR = (uint8_t) *BufferPtr;
       BufferPtr++;
       Length--;
     }
@@ -172,7 +172,7 @@ void UARTSend( uint32_t portNum, uint8_t *BufferPtr, uint32_t Length )
     {
       /* THRE status, contain valid data */
       while ( !(LPC_UART1->LSR & 1<<5) );
-      LPC_UART1->THR = *BufferPtr;
+      LPC_UART1->THR = (uint8_t) *BufferPtr;
       BufferPtr++;
       Length--;
     }
@@ -270,7 +270,7 @@ int main (void) {
 					HID_Host_ReceiveReport(&Mouse_HID_Interface, &MouseReport);
 
           UARTSend( 0, "Mouse Buttons: ", 15 );
-          UARTSend( 0, MouseReport.Button, 1 );
+          UARTSend( 0, (char *) &MouseReport.Button, 1 );
           UARTSend( 0, "\r", 1 );
 				}
 
@@ -324,5 +324,13 @@ void EVENT_USB_Host_DeviceEnumerationFailed(const uint8_t ErrorCode,
                                             const uint8_t SubErrorCode)
 {
  	UARTSend( 0, "Device Enumeration Failed\r", 26 ); 
+}
+
+/* Dummy */
+uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
+    const uint8_t wIndex,
+    const void** const DescriptorAddress)
+{
+  //
 }
 

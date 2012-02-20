@@ -30,62 +30,41 @@
 */
 
 
-#define  __INCLUDE_FROM_USBTASK_C
-#define  __INCLUDE_FROM_USB_DRIVER
-#include "USBTask.h"
 
-volatile bool        USB_IsInitialized;
-USB_Request_Header_t USB_ControlRequest;// __DATA(USBRAM_SECTION);
+/** \file
+ *
+ *  Header file for ConfigDescriptor.c.
+ */
 
-#if defined(USB_CAN_BE_HOST) && !defined(HOST_STATE_AS_GPIOR)
-volatile uint8_t     USB_HostState;
-#endif
+#ifndef _CONFIGDESCRIPTOR_H_
+#define _CONFIGDESCRIPTOR_H_
 
-#if defined(USB_CAN_BE_DEVICE) && !defined(DEVICE_STATE_AS_GPIOR)
-volatile uint8_t     USB_DeviceState;
-#endif
+	/* Includes: */
+		#include "LUFA/Drivers/USB/USB.h"
 
-void USB_USBTask(void)
-{
-	#if defined(USB_HOST_ONLY)
-		USB_HostTask();
-	#elif defined(USB_DEVICE_ONLY)
-		USB_DeviceTask();
-	#else
-		if (USB_CurrentMode == USB_MODE_Device)
-		  USB_DeviceTask();
-		else if (USB_CurrentMode == USB_MODE_Host)
-		  USB_HostTask();
-	#endif
-}
+		#include "HIDReport.h"
 
-#if defined(USB_CAN_BE_DEVICE)
-static void USB_DeviceTask(void)
-{
-	if (USB_DeviceState != DEVICE_STATE_Unattached)
-	{
-		uint8_t PrevEndpoint = Endpoint_GetCurrentEndpoint();
+	/* Macros: */
+		/** Pipe number for the mouse report data pipe. */
+		#define MOUSE_DATA_IN_PIPE          1
 
-		Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
+	/* Enums: */
+		/** Enum for the possible return codes of the \ref ProcessConfigurationDescriptor() function. */
+		enum MouseHostWithParser_GetConfigDescriptorDataCodes_t
+		{
+			SuccessfulConfigRead            = 0, /**< Configuration Descriptor was processed successfully */
+			ControlError                    = 1, /**< A control request to the device failed to complete successfully */
+			DescriptorTooLarge              = 2, /**< The device's Configuration Descriptor is too large to process */
+			InvalidConfigDataReturned       = 3, /**< The device returned an invalid Configuration Descriptor */
+			NoCompatibleInterfaceFound      = 4, /**< A compatible interface with the required endpoints was not found */
+		};
 
-		if (Endpoint_IsSETUPReceived())
-		  USB_Device_ProcessControlRequest();
+	/* Function Prototypes: */
+		uint8_t ProcessConfigurationDescriptor(void);
 
-		Endpoint_SelectEndpoint(PrevEndpoint);
-	}
-}
-#endif
+		uint8_t DComp_NextMouseInterface(void* CurrentDescriptor);
+		uint8_t DComp_NextMouseInterfaceDataEndpoint(void* CurrentDescriptor);
+		uint8_t DComp_NextHID(void* CurrentDescriptor);
 
-#if defined(USB_CAN_BE_HOST)
-static void USB_HostTask(void)
-{
-	uint8_t PrevPipe = Pipe_GetCurrentPipe();
-
-	Pipe_SelectPipe(PIPE_CONTROLPIPE);
-
-	USB_Host_ProcessNextHostState();
-
-	Pipe_SelectPipe(PrevPipe);
-}
 #endif
 

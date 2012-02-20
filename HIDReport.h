@@ -30,62 +30,56 @@
 */
 
 
-#define  __INCLUDE_FROM_USBTASK_C
-#define  __INCLUDE_FROM_USB_DRIVER
-#include "USBTask.h"
 
-volatile bool        USB_IsInitialized;
-USB_Request_Header_t USB_ControlRequest;// __DATA(USBRAM_SECTION);
+/** \file
+ *
+ *  Header file for HIDReport.c.
+ */
 
-#if defined(USB_CAN_BE_HOST) && !defined(HOST_STATE_AS_GPIOR)
-volatile uint8_t     USB_HostState;
-#endif
+#ifndef _HID_REPORT_H_
+#define _HID_REPORT_H_
 
-#if defined(USB_CAN_BE_DEVICE) && !defined(DEVICE_STATE_AS_GPIOR)
-volatile uint8_t     USB_DeviceState;
-#endif
+	/* Includes: */
+		#include "LUFA/Drivers/USB/USB.h"
 
-void USB_USBTask(void)
-{
-	#if defined(USB_HOST_ONLY)
-		USB_HostTask();
-	#elif defined(USB_DEVICE_ONLY)
-		USB_DeviceTask();
-	#else
-		if (USB_CurrentMode == USB_MODE_Device)
-		  USB_DeviceTask();
-		else if (USB_CurrentMode == USB_MODE_Host)
-		  USB_HostTask();
-	#endif
-}
+		#include "MouseHost.h"
 
-#if defined(USB_CAN_BE_DEVICE)
-static void USB_DeviceTask(void)
-{
-	if (USB_DeviceState != DEVICE_STATE_Unattached)
-	{
-		uint8_t PrevEndpoint = Endpoint_GetCurrentEndpoint();
+	/* Macros: */
+		/** HID Report Descriptor Usage for a Mouse. */
+		#define USAGE_MOUSE                 0x02
 
-		Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
+		/** HID Report Descriptor Usage Page value for a toggle button. */
+		#define USAGE_PAGE_BUTTON           0x09
 
-		if (Endpoint_IsSETUPReceived())
-		  USB_Device_ProcessControlRequest();
+		/** HID Report Descriptor Usage Page value for a Generic Desktop Control. */
+		#define USAGE_PAGE_GENERIC_DCTRL    0x01
 
-		Endpoint_SelectEndpoint(PrevEndpoint);
-	}
-}
-#endif
+		/** HID Report Descriptor Usage value for a X axis movement. */
+		#define USAGE_X                     0x30
 
-#if defined(USB_CAN_BE_HOST)
-static void USB_HostTask(void)
-{
-	uint8_t PrevPipe = Pipe_GetCurrentPipe();
+		/** HID Report Descriptor Usage value for a Y axis movement. */
+		#define USAGE_Y                     0x31
 
-	Pipe_SelectPipe(PIPE_CONTROLPIPE);
+		/** HID Report Descriptor Usage value for a Scroll Wheel movement. */
+		#define USAGE_SCROLL_WHEEL          0x38
 
-	USB_Host_ProcessNextHostState();
+	/* Enums: */
+		/** Enum for the possible return codes of the \ref GetHIDReportData() function. */
+		enum MouseHostWithParser_GetHIDReportDataCodes_t
+		{
+			ParseSuccessful         = 0, /**< HID report descriptor parsed successfully */
+			ParseError              = 1, /**< Failed to fully process the HID report descriptor */
+			ParseControlError       = 2, /**< Control error occurred while trying to read the device HID descriptor */
+		};
 
-	Pipe_SelectPipe(PrevPipe);
-}
+	/* External Variables: */
+		extern uint16_t         HIDReportSize;
+		extern HID_ReportInfo_t HIDReportInfo;
+
+	/* Function Prototypes: */
+		uint8_t GetHIDReportData(void);
+
+		bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t* const CurrentItem);
+
 #endif
 

@@ -400,5 +400,6 @@
 		#include "Class/RNDIS.h"
 		#include "Class/StillImage.h"
 
+    #define   ENDPOINT_DESCRIPTOR_DIR_IN   0x80
 #endif
 

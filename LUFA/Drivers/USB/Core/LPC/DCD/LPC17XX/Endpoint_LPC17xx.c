@@ -41,9 +41,9 @@
 
 volatile bool SETUPReceived;
 
-uint32_t UDCA[32] __DATA(USBRAM_SECTION) ATTR_ALIGNED(128);
-DMADescriptor dmaDescriptor[USED_PHYSICAL_ENDPOINTS] __DATA(USBRAM_SECTION);
-static uint8_t SetupPackage[8] __DATA(USBRAM_SECTION);
+uint32_t UDCA[32] /*__DATA(USBRAM_SECTION)*/ ATTR_ALIGNED(128);
+DMADescriptor dmaDescriptor[USED_PHYSICAL_ENDPOINTS];// __DATA(USBRAM_SECTION);
+static uint8_t SetupPackage[8];// __DATA(USBRAM_SECTION);
 /*
  *  Write Command
  *    Parameters:      cmd:   Command

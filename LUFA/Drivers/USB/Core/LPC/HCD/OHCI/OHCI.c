@@ -43,7 +43,7 @@
 #include "../HCD.h"
 #include "OHCI.h"
 
-OHCI_HOST_DATA_Type ohci_data[MAX_HOST_CONTROLLER] __DATA(USBRAM_SECTION);
+OHCI_HOST_DATA_Type ohci_data[MAX_HOST_CONTROLLER];// __DATA(USBRAM_SECTION);
 
 /*=======================================================================*/
 /*  G L O B A L   S Y M B O L   D E C L A R A T I O N S                  */

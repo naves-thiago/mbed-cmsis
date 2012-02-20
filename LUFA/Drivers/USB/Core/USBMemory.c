@@ -54,7 +54,7 @@ typedef struct MemBlockInfo_t {
 #define  NEXT_BLOCK(x)            ( ((PMemBlockInfo) ( ((x)->next==0) ? NULL : head + (x)->next )) )
 #define  LINK_TO_THIS_BLOCK(x)    ( ((uint32_t) ((x)-head)) )
 
-static uint8_t USB_Mem_Buffer[USBRAM_BUFFER_SIZE] ATTR_ALIGNED(4) __DATA(USBRAM_SECTION);
+static uint8_t USB_Mem_Buffer[USBRAM_BUFFER_SIZE] ATTR_ALIGNED(4); // __DATA(USBRAM_SECTION);
 
 /************************************************************************
  Function    : lpc_memory_init
