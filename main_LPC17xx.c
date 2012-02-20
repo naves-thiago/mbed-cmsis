@@ -10,8 +10,9 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
-
+#define __LPC17XX__
 #include "LPC17xx.h"
+#include "MouseHost.h"
 
 
 volatile uint32_t msTicks;                            /* counts 1ms timeTicks */
@@ -183,6 +184,27 @@ void UARTSend( uint32_t portNum, uint8_t *BufferPtr, uint32_t Length )
 /*----------------------------------------------------------------------------
   MAIN function
  *----------------------------------------------------------------------------*/
+#define HOST_STATE_WaitForDeviceRemoval HOST_STATE_Default
+
+/** LUFA HID Class driver interface configuration and state information. This structure is
+ *  *  passed to all HID Class driver functions, so that multiple instances of the same class
+ *   *  within a device can be differentiated from one another.
+ *    */
+USB_ClassInfo_HID_Host_t Mouse_HID_Interface =
+{
+  .Config =
+  {
+    .DataINPipeNumber       = 1,
+    .DataINPipeDoubleBank   = false,
+
+    .DataOUTPipeNumber      = 2,
+    .DataOUTPipeDoubleBank  = false,
+
+    .HIDInterfaceProtocol   = HID_CSCP_MouseBootProtocol,
+  },
+};
+
+
 int main (void) {
 
   SystemCoreClockUpdate();
@@ -197,11 +219,12 @@ int main (void) {
 
   UARTSend( 0, "Mouse Host Demo running.\r", 25 );
 
-	for (;;)
+  for (;;)
 	{
 		switch (USB_HostState)
 		{
 			case HOST_STATE_Addressed:
+      {
 				uint16_t ConfigDescriptorSize;
 				uint8_t  ConfigDescriptorData[512];
 
@@ -238,7 +261,9 @@ int main (void) {
         UARTSend( 0,"Mouse Enumerated.\r", 18 ); 
 				USB_HostState = HOST_STATE_Configured;
 				break;
+      }
 			case HOST_STATE_Configured:
+      {
 				if (HID_Host_IsReportReceived(&Mouse_HID_Interface))
 				{
 					USB_MouseReport_Data_t MouseReport;
@@ -250,6 +275,7 @@ int main (void) {
 				}
 
 				break;
+      }
 		}
 
 		HID_Host_USBTask(&Mouse_HID_Interface);

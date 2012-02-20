@@ -358,6 +358,7 @@
 
 			}
 
+#if 0
 			#if defined(USB_CAN_BE_BOTH)
 			static inline uint8_t USB_GetUSBModeFromUID(void) ATTR_WARN_UNUSED_RESULT ATTR_ALWAYS_INLINE;
 			static inline uint8_t USB_GetUSBModeFromUID(void)
@@ -368,7 +369,7 @@
 				  return USB_MODE_Host;
 			}
 			#endif
-
+#endif
 	#endif
 
 	/* Disable C linkage for C++ Compilers: */

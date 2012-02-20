@@ -26,7 +26,7 @@
 #ifndef __USBMEMORY_H__
 #define __USBMEMORY_H__
 
-#include "lpc_types.h"
+#include "../../../../lpc_types.h"
 #include "../../../Common/Common.h"
 
 /************************************************************************/

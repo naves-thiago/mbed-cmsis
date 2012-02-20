@@ -33,8 +33,8 @@
 #ifndef __HAL_LPC17XX_H__
 #define __HAL_LPC17XX_H__
 
-#include "LPC17xx.h"
-#include "lpc_types.h"
+#include "../../../../../../../LPC17xx.h"
+#include "../../../../../../../lpc_types.h"
 #define  __INCLUDE_FROM_USB_DRIVER
 #include "../../../USBMode.h"
 
