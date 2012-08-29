@@ -210,6 +210,24 @@ int main (void) {
   LED_Config();                             
   UARTInit( 0, 9600 );
 
+  //Make sure the timer 0 block has power
+  LPC_SC->PCONP |= (1<<1);
+
+  // Setup timer prescaler ( PCLK / 1000 )
+  LPC_TIM0->PR = 999;
+
+  // Setup match value
+  LPC_TIM0->MR0 = 100;
+
+  // Interrupt on match, reset timer on match
+  LPC_TIM0->MCR = 1<<0 | 1<<1;
+
+  // Reset Timer
+  LPC_TIM0->PC = 0;
+  LPC_TC = 0;
+
+  // Enable Timer
+  LPC_TIM0->TCR = 1;
 
   uint32_t led = 1<<18;
   while(1) {
@@ -217,7 +235,6 @@ int main (void) {
     Delay (100);                                /* delay  100 Msec */
     LED_Off (led);                              /* Turn off the LED. */
     Delay (100);                                /* delay  100 Msec */
-    UARTSend( 0, "1234567890---", 13 );
   }
 
 }
@@ -234,3 +251,12 @@ void UART0_IRQHandler(void) {
 //      break;
 //  }
 }
+
+void TIMER0_IRQHandler(void) {
+  // Clear interrupt
+  LPC_TIM0->IR = 1;
+
+  LPC_GPIO1->FIOPIN |= 1<<20;                  /* Turn On  LED */
+
+}
+

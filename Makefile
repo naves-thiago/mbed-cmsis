@@ -14,17 +14,18 @@ LDFLAGS = -mcpu=cortex-m3 -mthumb -O$(OPTIMIZATION) -nostartfiles -Wl,-Map=$(PRO
 ASFLAGS = $(LISTING) -mcpu=cortex-m3
 
 #  Compiler/Assembler/Linker Paths
-GCC = arm-eabi-gcc
-AS = arm-eabi-as
-LD = arm-eabi-ld
-OBJCOPY = arm-eabi-objcopy
+GCC = arm-none-eabi-gcc
+AS = arm-none-eabi-as
+LD = arm-none-eabi-ld
+OBJCOPY = arm-none-eabi-objcopy
 REMOVE = rm -f
-SIZE = arm-eabi-size
+SIZE = arm-none-eabi-size
 
 #########################################################################
 
 all: $(PROJECT).elf stats
 	$(OBJCOPY) -O binary -j .text -j .data $(PROJECT).elf $(PROJECT).bin
+	cp $(PROJECT).bin h:
 
 $(PROJECT).elf: $(OBJECTS)
 	$(GCC) $(LDFLAGS) $(OBJECTS) -o $(PROJECT).elf
