@@ -4,15 +4,36 @@
 /*-----------------------------------------------------------------------*/
 
 Context tasks[2];
+int current_task = 0;
 
 void context_next( void )
 {
+  volatile void * nsp; // Next SP
+  volatile void * npc; // Next PC
+  volatile void * sp;  // Current SP
+  volatile void * pc;  // Current PC
+
+  sp = tasks[current_task].sp;
+  pc = tasks[current_task].pc;
+
+  current_task++;
+  nsp = tasks[current_task].sp;
+  npc = tasks[current_task].pc;
+
   asm(
       "stmfd   sp!, {r0-r12}\n\r"              // Push registers
       "mrs     r0, cpsr\n\r"
-      "stmfd   sp!, {r0, lr}\n\r"
-      "ldr     r0, =other_stack\n\r"           // Get other_stack pointer
-      "str     sp, [r0]\n\r"                   // Store SP into other_stack
+      "stmfd   sp!, {r0, lr}\n\r" 
+      "ldr     r0, =sp\n\r"                    // Store SP 
+      "str     sp, [r0]\n\r"
+      "ldr     r0, =nsp\n\r"                   // Load next SP
+      "ldr     sp, [r0]\n\r"
+      "ldmfd   sp!, {r0, lr}\n\r"              // Pop registers 
+      "msr     SPSR_cxsf, r0\n\r"
+      "ldmfd   sp!, {r0-r12}\n\r"
+      "mov     pc, lr\n\r"                     // Start task
+     );
+}
 
 
 void context_mmc( void )
