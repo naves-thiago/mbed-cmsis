@@ -1,7 +1,7 @@
 #  Project Name
 PROJECT=mbed_test
 #  List of the objects files to be compiled/assembled
-OBJECTS=startup_LPC17xx.o core_cm3.o system_LPC17xx.o main_LPC17xx.o 
+OBJECTS=startup_LPC17xx.o core_cm3.o system_LPC17xx.o main_LPC17xx.o context.o 
 LSCRIPT=LPC17xx.ld
 
 OPTIMIZATION = 0
