@@ -191,6 +191,51 @@ void UARTSend( uint32_t portNum, uint8_t *BufferPtr, uint32_t Length )
   return;
 }
 
+/*****************************************************************************
+ * ** Function name:   I2C Init 
+ * **
+ * ** Descriptions:  Initializes the I2C port as a master controller
+ * **
+ * ** parameters:     portNum (0,1,2), clockDiv (1,2,4,8)
+ * ** Returned value:   None
+ * ** 
+ * *****************************************************************************/
+void I2CInit( int8_t portNum, uint8_t clockDiv)
+{
+  // Power on the peripheral
+  const uint32_t i2c_pconp[3] = {1<<7, 1<<19, 1<<26};
+  LPC_SC->PCONP |= i2c_pconp[portNum];
+
+  // Set the clock
+  uint32_t * i2c_clk_reg[3] = {&(LPC_SC->PCLKSEL0), &(LPC_SC->PCLKSEL01, &(LPC_SC->PCLKSEL1)};
+  uint8_t i2c_clk_bits[3] = {14, 6, 20};
+
+  // Clear clock bits
+  *(i2c_clk_reg[portNum]) &= ~(3<<i2c_clk_bits[portNum]);
+
+  // Set the right ones
+  switch (clockDiv) {
+    case 1: *(i2c_clk_reg[portNum]) |= 1<<i2c_clk_bits[portNum]; break;
+    case 2: *(i2c_clk_reg[portNum]) |= 2<<i2c_clk_bits[portNum]; break;
+    case 8: *(i2c_clk_reg[portNum]) |= 3<<i2c_clk_bits[portNum]; break;
+  }
+  
+  // Change pin function
+  switch (porNum) {
+    case 0: 
+      LPC_PINCON->PINSEL1 &= ~(3<<22 | 3<<24);
+      LPC_PINCON->PINSEL1 |= 1<<22 | 1<<24;
+      break;
+
+    case 1: LPC_PINCON->PINSEL0 |= 3 | 3<<2;
+            break;
+
+    case 2: LPC_PINCON->PINSEL0 &= ~(3<<20 | 3<<22);
+            LPC_PINCON->PINSEL0 |= 1<<21 | 1<<23; 
+            break;
+  }
+}
+
 /******************************************************************************
  * **                            End Of File
  * ******************************************************************************/
