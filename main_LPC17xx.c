@@ -24,19 +24,28 @@
 
 #include "LPC17xx.h"
 
+/*
+ * LCD prototypes
+ */
+void lcd_write(uint8_t data);
+void lcd_send_cmd(uint8_t cmd);
+void lcd_send_data(uint8_t data);
+void lcd_init(void);
+
+
 
 volatile uint32_t msTicks;                            /* counts 1ms timeTicks */
 /*----------------------------------------------------------------------------
   SysTick_Handler
  *----------------------------------------------------------------------------*/
 void SysTick_Handler(void) {
-  msTicks++;                        /* increment counter necessary in Delay() */
+  msTicks++;                        /* increment counter necessary in delay() */
 }
 
 /*------------------------------------------------------------------------------
   delays number of tick Systicks (happens every 1 ms)
  *------------------------------------------------------------------------------*/
-__INLINE static void Delay (uint32_t dlyTicks) {
+__INLINE static void delay (uint32_t dlyTicks) {
   uint32_t curTicks;
 
   curTicks = msTicks;
@@ -191,9 +200,73 @@ void UARTSend( uint32_t portNum, uint8_t *BufferPtr, uint32_t Length )
   return;
 }
 
-/******************************************************************************
- * **                            End Of File
- * ******************************************************************************/
+/* --------------------------------------------------------------------------
+  LCD functions
+ * --------------------------------------------------------------------------*/
+
+#define LCD_DELAY 10 // ms
+#define RS (1<<15)
+#define RW (1<<9)
+#define EN (1<<8)
+
+/*
+ * p0.0 - b0
+ * p0.1 - b1
+ * p2.0 ~ p2.5 - b2~7
+ * p0.8 - EN (active high)
+ * p0.9 - R/W (low = write)
+ * p0.15 - RS (low = Command)
+ */
+
+void lcd_init(void)
+{
+  /* Set write mode first */
+  LPC_GPIO0->FIODIR |= RW;
+  LPC_GPIO0->FIOPIN &= ~RW;
+  delay(LCD_DELAY);
+
+  /* Set all pins as output */
+  LPC_GPIO0->FIODIR |= 3 | (3<<8) | (1<<15);
+  LPC_GPIO2->FIODIR |= 0x3F;
+
+  LPC_GPIO0->FIOPIN &= ~EN;
+
+  // Initialize lcd (HD44780)
+  lcd_send_cmd(0x38);   // function set:
+                        // 8-bit interface, 2 display lines, 5x7 font
+  lcd_send_cmd(0x06);   // entry mode set:
+                        // increment automatically, no display shift
+  lcd_send_cmd(0x0E);   // display control:
+                        // turn display on, cursor on, no blinking
+  lcd_send_cmd(0x01);   // clear display, set cursor position to zero
+}
+
+void lcd_send_cmd(uint8_t cmd)
+{
+  LPC_GPIO0->FIOPIN &= ~RS; // CMD mode
+  LPC_GPIO0->FIOPIN |= EN;
+  lcd_write(cmd);
+  delay(LCD_DELAY);
+  LPC_GPIO0->FIOPIN |= ~EN;
+}
+
+void lcd_send_data(uint8_t data)
+{
+  LPC_GPIO0->FIOPIN |= RS; // Data mode
+  LPC_GPIO0->FIOPIN |= EN;
+  lcd_write(data);
+  delay(LCD_DELAY);
+  LPC_GPIO0->FIOPIN |= ~EN;
+}
+
+void lcd_write(uint8_t data)
+{
+  LPC_GPIO0->FIOPIN &= ~3;
+  LPC_GPIO0->FIOPIN |= data & 3;
+
+  LPC_GPIO2->FIOPIN &= ~0x3F;
+  LPC_GPIO2->FIOPIN |= (data >> 2) & 0x3F;
+}
 
 /*----------------------------------------------------------------------------
   MAIN function
@@ -210,13 +283,29 @@ int main (void) {
   LED_Config();                             
   UARTInit( 0, 9600 );
 
+#if 1
+  lcd_init();
+  lcd_send_data('Y');
+  lcd_send_data('a');
+  lcd_send_data('y');
+#endif
+
+  LPC_GPIO0->FIODIR |= 3 | (3<<8) | (1<<15);
+  LPC_GPIO2->FIODIR |= 0x3F;
 
   uint32_t led = 1<<18;
   while(1) {
+//    LPC_GPIO0->FIOPIN |= 3 | (3<<8) | (1<<15);
+//    LPC_GPIO2->FIOPIN |= 0x3F;
+
     LED_On (led);                               /* Turn on the LED. */
-    Delay (100);                                /* delay  100 Msec */
+    delay (100);                                /* delay  100 Msec */
     LED_Off (led);                              /* Turn off the LED. */
-    Delay (100);                                /* delay  100 Msec */
+
+//    LPC_GPIO0->FIOPIN &= ~(3 | (3<<8) | (1<<15));
+//    LPC_GPIO2->FIOPIN &= ~(0x3F);
+
+    delay (100);                                /* delay  100 Msec */
     UARTSend( 0, "1234567890---", 13 );
   }
 
